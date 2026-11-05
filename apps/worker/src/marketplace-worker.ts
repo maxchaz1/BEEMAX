@@ -10,6 +10,15 @@ export { InstantSpaceDurableObject } from "./InstantSpaceDurableObject";
 export { MicrokernelProcessActor } from "./kernel";
 export { ProductFactoryActor } from "./factory";
 
+function allowedOrigins(env: Env) {
+  return new Set(
+    (env.MARKETPLACE_ORIGIN ?? "")
+      .split(",")
+      .map((origin) => origin.trim())
+      .filter(Boolean),
+  );
+}
+
 export default {
   async scheduled(
     _event: ScheduledController,
@@ -21,24 +30,24 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     const origin = request.headers.get("Origin");
-    const expected = env.MARKETPLACE_ORIGIN;
+    const allowed = allowedOrigins(env);
     const headers = new Headers({
       "Cache-Control": "no-store",
       Vary: "Origin",
       "X-Content-Type-Options": "nosniff",
     });
-    if (origin && origin === expected) {
+    if (origin && allowed.has(origin)) {
       headers.set("Access-Control-Allow-Origin", origin);
       headers.set("Access-Control-Allow-Credentials", "true");
       headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
       headers.set("Access-Control-Allow-Headers", "Content-Type");
     }
     if (
-      (origin && origin !== expected) ||
-      (request.method === "POST" && origin !== expected)
+      (origin && !allowed.has(origin)) ||
+      (request.method === "POST" && (!origin || !allowed.has(origin)))
     )
       return Response.json(
-        { error: "Origin not allowed" },
+        { error: "Origin not allowed. Add this exact Pages origin to MARKETPLACE_ORIGIN." },
         { status: 403, headers },
       );
     if (request.method === "OPTIONS")
@@ -56,8 +65,6 @@ export default {
         request.method === "POST" &&
         env.DOWNLOADS_SECRET
       ) {
-        // Enable the audited HMAC flow when the dedicated production secret is
-        // provisioned. Without it, preserve the existing trusted DOWNLOADS adapter.
         response = await grantFromRequest(request, env);
       } else if (
         url.pathname === "/api/downloads/grant" &&
