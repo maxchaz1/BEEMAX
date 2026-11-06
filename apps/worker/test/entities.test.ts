@@ -51,7 +51,7 @@ describe("staff entity registry API", () => {
     expect(response.status).toBe(403);
   });
 
-  it("stores and returns the complete structured entity for staff", async () => {
+  it("stores and returns full entities and a compact active interface list", async () => {
     const headers = { Origin: allowedOrigin, Authorization: "Bearer synthetic-test-token" };
     const create = await SELF.fetch("https://portal.test/api/entities", {
       method: "POST",
@@ -59,6 +59,10 @@ describe("staff entity registry API", () => {
       body: JSON.stringify(entity),
     });
     expect(create.status).toBe(201);
+
+    const list = await SELF.fetch("https://portal.test/api/entities", { headers });
+    expect(list.status).toBe(200);
+    expect(await list.json()).toEqual({ entities: [{ entity_id: entity.entity_id, category: entity.category, title: entity.title, status: entity.status }] });
 
     const read = await SELF.fetch("https://portal.test/api/entities?id=ent_bemax_cog_01", { headers });
     expect(read.status).toBe(200);

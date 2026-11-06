@@ -67,10 +67,7 @@ function parseStoredJson(value: unknown): unknown {
   return parsed;
 }
 
-/**
- * Called only after the worker's global portal guard has authenticated staff and
- * applied the configured ALLOWED_ORIGINS policy. Mutations inherit its Governor-only rule.
- */
+/** Called after the global portal guard authenticates staff and checks origin. */
 export async function handleEntityRequest(request: Request, env: Env): Promise<Response | null> {
   const url = new URL(request.url);
   if (url.pathname !== "/api/entities") return null;
@@ -78,7 +75,13 @@ export async function handleEntityRequest(request: Request, env: Env): Promise<R
 
   if (request.method === "GET") {
     const id = url.searchParams.get("id");
-    if (!id || !ID_PATTERN.test(id)) return fail("A valid entity ID is required", 400);
+    if (id === null) {
+      const rows = await env.DB.prepare(
+        "SELECT entity_id, category, title, status FROM entity_registry WHERE status = 'active' ORDER BY category, title LIMIT 100",
+      ).all<{ entity_id: string; category: string; title: string; status: string }>();
+      return Response.json({ entities: rows.results }, { headers });
+    }
+    if (!ID_PATTERN.test(id)) return fail("A valid entity ID is required", 400);
     const row = await env.DB.prepare(
       "SELECT entity_id, category, title, status, ui_binding, state_payload, telemetry_stream, controls FROM entity_registry WHERE entity_id = ?",
     ).bind(id).first<Record<string, unknown>>();
@@ -102,7 +105,6 @@ export async function handleEntityRequest(request: Request, env: Env): Promise<R
   if (request.method !== "POST") return fail("Method not allowed", 405);
   const declaredLength = Number(request.headers.get("Content-Length") ?? 0);
   if (declaredLength > MAX_BODY_BYTES) return fail("Entity payload is too large", 413);
-
   let raw: string;
   try {
     raw = await request.text();
@@ -110,7 +112,6 @@ export async function handleEntityRequest(request: Request, env: Env): Promise<R
   } catch {
     return fail("Unable to read entity payload", 400);
   }
-
   let input: unknown;
   try {
     input = JSON.parse(raw);
@@ -119,7 +120,6 @@ export async function handleEntityRequest(request: Request, env: Env): Promise<R
   }
   const entity = validateEntity(input);
   if (!entity) return fail("Entity does not match the supported schema", 400);
-
   await env.DB.prepare(
     `INSERT INTO entity_registry (entity_id, category, title, status, ui_binding, state_payload, telemetry_stream, controls, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -137,6 +137,5 @@ export async function handleEntityRequest(request: Request, env: Env): Promise<R
     JSON.stringify(entity.controls),
     Math.floor(Date.now() / 1000),
   ).run();
-
   return Response.json({ success: true, entity_id: entity.entity_id }, { status: 201, headers });
 }

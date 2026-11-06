@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "../components/Sidebar";
 import { Header } from "../components/Header";
+import { PortalHUDToolbar } from "../components/PortalHUDToolbar";
 export function MainLayout() {
   return (
     <div className="app">
@@ -17,6 +18,7 @@ export function MainLayout() {
           <span>Cloudflare edge infrastructure</span>
         </footer>
       </div>
+      <PortalHUDToolbar />
     </div>
   );
 }
