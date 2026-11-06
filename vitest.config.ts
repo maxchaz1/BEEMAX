@@ -24,5 +24,6 @@ export default defineConfig({
       "apps/worker/test/**/*.test.ts",
       "apps/pages/src/api/__tests__/**/*.test.ts",
     ],
+    setupFiles: ["./apps/worker/test/setup.ts"],
   },
 });
