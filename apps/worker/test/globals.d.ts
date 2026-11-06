@@ -1,6 +1,7 @@
 declare global {
-  const Env: typeof import("../src/types").Env;
-  const bindings: import("../src/types").Env;
+  type Env = import("../src/types").Env;
+
+  const bindings: Env;
   const SELF: typeof import("cloudflare:test").SELF;
   const worker: typeof import("../src/index").default;
   const createExecutionContext: typeof import("cloudflare:test").createExecutionContext;
