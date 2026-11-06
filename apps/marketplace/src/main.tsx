@@ -11,6 +11,7 @@ import {
 } from "react-router-dom";
 import { useApi } from "../../pages/src/hooks/useApi";
 import { request, post, price, type Item } from "./api";
+import { UnifiedHUD } from "./components/UnifiedHUD";
 import "./style.css";
 
 const categories = [
@@ -195,9 +196,10 @@ function Product() {
   const { slug } = useParams();
   const load = useCallback(
     (signal: AbortSignal) =>
-      request<
-        Item & { reviews: { name: string; rating: number; body: string }[] }
-      >(`/api/products/${encodeURIComponent(slug ?? "")}`, { signal }),
+      request<Item & { reviews: { name: string; rating: number; body: string }[] }>(
+        `/api/products/${encodeURIComponent(slug ?? "")}`,
+        { signal },
+      ),
     [slug],
   );
   const state = useApi(load);
@@ -637,6 +639,7 @@ function App() {
               {title}
             </NavLink>
           ))}
+          <NavLink to="/hud">HUD</NavLink>
         </nav>
         <div className="account-nav">
           <Link to="/library">Library</Link>
@@ -655,6 +658,7 @@ function App() {
               element={<Catalog category={slug} />}
             />
           ))}
+          <Route path="hud" element={<UnifiedHUD />} />
           <Route path="product/:slug" element={<Product />} />
           <Route path="creators/:slug" element={<Creator />} />
           <Route path="library" element={<Library />} />
