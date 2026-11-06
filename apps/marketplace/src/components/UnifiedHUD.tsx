@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { request, type Item } from "../api";
+import { ArtGallery } from "./ArtGallery";
 
 /** A compact marketplace HUD for quick access to catalog activity and key routes. */
 export function UnifiedHUD() {
@@ -50,6 +51,7 @@ export function UnifiedHUD() {
           ))}</div>
         ) : <div className="empty"><h3>No releases yet</h3><p>Newly published marketplace items will appear here.</p></div>)}
       </section>
+      <ArtGallery />
     </section>
   );
 }
