@@ -16,6 +16,10 @@ database_name = "portal-os1-production1-db"
 database_id = "73b4f0ee-5eb1-4ccd-9b50-1ec9ab39532b"
 migrations_dir = "apps/worker/d1/migrations"
 
+[[services]]
+binding = "PLANETARY_MAX"
+service = "planetary-max"
+
 [durable_objects]
 bindings = [
   { name = "MICROKERNEL_ACTOR", class_name = "MicrokernelProcessActor" },

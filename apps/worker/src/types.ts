@@ -17,6 +17,7 @@ export interface Env {
   INSTANT_SPACE?: DurableObjectNamespace;
   DB: D1Database;
   MICROKERNEL_ACTOR?: DurableObjectNamespace;
+  PLANETARY_MAX?: Fetcher;
   ALLOWED_ORIGINS?: string;
   GOVERNOR_API_TOKEN?: string;
   CF_STREAM_ACCOUNT_ID?: string;
